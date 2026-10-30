@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+viva.db
+uploads/
+.pytest_cache/

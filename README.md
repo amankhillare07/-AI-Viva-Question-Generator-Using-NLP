@@ -1,210 +1,156 @@
-An AI-powered web application that automatically generates viva questions from study materials using Natural Language Processing (NLP). Students can upload notes, generate **Easy, Medium, and Difficult** questions, practise answering them, evaluate their answers, and track their performance through an interactive dashboard.
+# AI Viva Question Generator Using Natural Language Processing
 
-## 🚀 Features
+A Flask web application that turns your study material (PDF, TXT or pasted notes) into **Easy / Medium / Difficult viva questions**, lets you practise answering them, **scores your answers with NLP**, and shows a **performance dashboard**. Everything runs locally - no paid APIs, no external LLM.
 
-- **Study Material Upload:** Upload PDF and TXT files or paste notes directly.
-- **Text Preprocessing:** Tokenization, stop-word removal, stemming, lemmatization, and sentence segmentation.
-- **NLP Analysis:** Extract keywords, identify named entities, analyze parts of speech, and calculate word frequencies.
-- **Automatic Question Generation:** Generate questions at three difficulty levels using rule-based NLP techniques.
-- **Viva Practice Mode:** Answer questions, skip questions, view reference answers, and practise interactively.
-- **Answer Evaluation:** Evaluate student answers using TF-IDF similarity and concept coverage.
-- **Text Summarization:** Generate extractive summaries and identify important sentences.
-- **Performance Dashboard:** Visualize question difficulty, answer performance, topic-wise results, and revision areas.
-- **Database Storage:** Store study materials, generated questions, and practice attempts using SQLite.
-- **Unit Testing:** Test preprocessing, question generation, and answer evaluation.
+## Features
 
-## 🛠️ Technologies Used
+| Module | What it does |
+|---|---|
+| Upload | PDF (PyMuPDF), TXT or pasted notes; 10 MB limit; extension + `%PDF` signature checks; friendly errors for empty, scanned, corrupted, password-protected and unsupported files; word / sentence statistics |
+| NLP Analysis | Sentence segmentation, tokenization, lowercasing, stop-word removal, punctuation removal, Porter stemming, WordNet lemmatization, POS tagging, spaCy NER, n-grams, word frequency, TF-IDF keywords, important sentences, extractive summary |
+| Question generation | Rule/pattern-based, three difficulty levels, each question has a source passage + reference answer + topic + method label ("Rule-based"); duplicates removed; explains when the material is too thin instead of inventing content |
+| Viva practice | One question at a time, difficulty badge, Submit / Show Reference / Skip / Next / Restart, live counters (answered, correct, skipped, remaining) |
+| Answer evaluation | Score /10, similarity %, concepts found, missing concepts, feedback. TF-IDF + concept coverage by default; optional sentence-transformers |
+| Dashboard | Chart.js charts computed from real SQLite records: level, topic, correct/partial/weak, recent trend, revision topics |
 
-| Category                 | Technologies          |
-| ------------------------ | --------------------- |
-| Programming Language     | Python                |
-| Backend                  | Flask                 |
-| Frontend                 | HTML, CSS, JavaScript |
-| NLP                      | NLTK, spaCy           |
-| Machine Learning         | Scikit-learn, TF-IDF  |
-| PDF Processing           | PyMuPDF               |
-| Database                 | SQLite                |
-| Charts and Visualization | Chart.js              |
-| Testing                  | pytest                |
+## Project structure
 
-## 📂 Project Structure
-
-```text
+```
 ai-viva-question-generator/
-│
-├── app.py
-├── database.py
-├── setup_nlp_data.py
+├── app.py                  Flask routes + JSON API
+├── database.py             SQLite schema and queries
+├── setup_nlp_data.py       Downloads NLTK data + spaCy model
 ├── requirements.txt
-├── README.md
-│
-├── data/
-│   └── sample_notes.txt
-│
-├── docs/
-│   └── Project_Report.pdf
-│
 ├── nlp/
-│   ├── preprocessing.py
-│   ├── keyword_extraction.py
-│   ├── question_generation.py
-│   ├── answer_evaluation.py
-│   └── summarization.py
-│
-├── static/
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       ├── main.js
-│       └── charts.js
-│
-├── templates/
-│   ├── base.html
-│   ├── index.html
-│   ├── upload.html
-│   ├── analysis.html
-│   ├── questions.html
-│   ├── practice.html
-│   ├── results.html
-│   ├── dashboard.html
-│   └── 404.html
-│
-└── tests/
-    ├── test_preprocessing.py
-    ├── test_question_generation.py
-    └── test_answer_evaluation.py
+│   ├── preprocessing.py        Module 2 pipeline
+│   ├── keyword_extraction.py   TF-IDF keywords, sentence ranking
+│   ├── question_generation.py  Rule-based generator
+│   ├── answer_evaluation.py    Scoring (configurable weights)
+│   └── summarization.py        Extractive summary
+├── templates/              base, index, upload, analysis, questions, practice, results, dashboard, 404
+├── static/css/style.css, static/js/main.js, static/js/charts.js
+├── data/sample_notes.txt
+└── tests/                  27 unit tests
 ```
 
-## ⚙️ Installation and Setup
+## Installation (Windows, PowerShell or CMD)
 
-### Prerequisites
+Requires Python 3.9+ (3.10-3.12 recommended). Open a terminal in the project folder.
 
-Install the following before running the project:
-
-- Python 3.9 or later (Python 3.10–3.12 recommended)
-- pip package manager
-- Git
-- Visual Studio Code or another Python IDE
-
-### Step 1: Clone the Repository
-
-```bash
-git clone https://github.com/YOUR-USERNAME/ai-viva-question-generator.git
-cd ai-viva-question-generator
-```
-
-Replace `YOUR-USERNAME` with your GitHub username.
-
-### Step 2: Create a Virtual Environment
-
-**Windows:**
-
-```bash
+```powershell
+# 1. Create and activate a virtual environment
 python -m venv venv
 venv\Scripts\activate
-```
+#   PowerShell blocked? run once:  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
-**macOS/Linux:**
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### Step 3: Install Dependencies
-
-```bash
+# 2. Install dependencies
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-```
 
-### Step 4: Download NLP Resources
-
-```bash
+# 3. Download NLTK datasets and the spaCy model
 python setup_nlp_data.py
-```
+#   (equivalent manual command for spaCy:  python -m spacy download en_core_web_sm)
 
-This script prepares the required NLTK datasets and spaCy language model.
+# 4. Initialise the database (also happens automatically on first run)
+python -c "import database; database.init_db(); print('database ready')"
 
-### Step 5: Run the Application
-
-```bash
+# 5. Run the app
 python app.py
+
+# 6. Open in your browser
+#    http://127.0.0.1:5000
 ```
 
-Open your browser and visit:
+macOS / Linux: use `python3` and `source venv/bin/activate`.
 
-**[http://127.0.0.1:5000](http://127.0.0.1:5000)**
+### Run in VS Code
 
-The application initializes its SQLite database automatically when it starts.
+1. `File > Open Folder...` and choose `ai-viva-question-generator`.
+2. `Ctrl+Shift+P` -> **Python: Select Interpreter** -> choose `.\venv\Scripts\python.exe`.
+3. Open a terminal (Ctrl + backtick) - it activates the venv automatically - then run steps 2-5 above.
+4. Press `F5` (Python file -> `app.py`) or run `python app.py` in the terminal.
 
-## 🧪 How to Use
+### Test with the sample notes
 
-1. Open the application in your browser.
-2. Upload a PDF or TXT file containing study notes, or paste your notes.
-3. Analyze the text to view keywords, named entities, important sentences, and summaries.
-4. Select the required difficulty level and generate viva questions.
-5. Start the practice session and answer the generated questions.
-6. Review your score, similarity percentage, identified concepts, and feedback.
-7. Open the dashboard to analyze your performance and identify topics for revision.
+1. Open `http://127.0.0.1:5000` and click **Try Sample NLP Notes** (or upload `data/sample_notes.txt`).
+2. **NLP Analysis** shows tokens, POS tags, entities, keywords and more.
+3. **Questions** -> choose *All*, 10 questions -> **Generate**.
+4. **Start Viva Practice** -> answer, skip, reveal references.
+5. Finish -> **Results**, then **Analytics** for charts.
 
-You can also try the sample NLP notes included in the `data/` directory.
+### Run the unit tests
 
-## 🧠 Answer Evaluation Method
-
-The application evaluates answers using TF-IDF cosine similarity and concept coverage.
-
-**Default scoring formula:**
-
-```text
-Score = 10 × (
-    0.40 × TF-IDF Similarity
-  + 0.60 × Concept Coverage
-)
+```powershell
+python -m pytest -q tests        # or: python -m unittest discover -s tests
 ```
 
-The score is calculated on a scale of 0 to 10.
+### Optional: semantic similarity
 
-| Score        | Evaluation |
-| ------------ | ---------- |
-| 7 and above  | Correct    |
-| 4 to below 7 | Partial    |
-| Below 4      | Weak       |
-
-The application identifies important concepts in the reference answer and checks how many are covered in the student's response.
-
-An optional semantic similarity mode using Sentence Transformers is also supported.
-
-## 🧪 Run Unit Tests
-
-Run the following command from the project directory:
-
-```bash
-python -m pytest -q tests
+```powershell
+pip install sentence-transformers
 ```
 
-The tests cover text preprocessing, question generation, and answer evaluation.
+The first scoring request downloads `all-MiniLM-L6-v2` (~90 MB, needs internet once). If the package or model is unavailable, the app silently falls back to TF-IDF scoring. Set `USE_SEMANTIC=0` to force the fallback. *Note: the semantic path was written to the library's documented API but could not be run in the build environment (no model download there); the TF-IDF path is what the tests and end-to-end checks exercised.*
 
-## 🔮 Future Enhancements
+## How scoring works
 
-- Integrate transformer-based question generation.
-- Add support for scanned PDFs using OCR.
-- Introduce user authentication and individual student profiles.
-- Support additional languages.
-- Export generated questions and results as PDF.
-- Add cloud deployment and persistent online storage.
-- Improve answer evaluation with advanced semantic similarity models.
+```
+TF-IDF only :  score = 10 * (0.40 * tfidf_cosine + 0.60 * concept_coverage)
+With semantic: score = 10 * (0.20 * tfidf_cosine + 0.30 * semantic_cosine + 0.50 * concept_coverage)
+correct >= 7   partial 4-7   weak < 4
+```
+Weights and thresholds are constants at the top of `nlp/answer_evaluation.py`. Concept coverage = share of the reference answer's key lemmas (up to 8) that appear in the student's answer.
 
-## 🎯 Project Objective
+## Example generated questions and evaluations (from `data/sample_notes.txt`, TF-IDF mode)
 
-The main objective of this project is to help students prepare for viva examinations efficiently by automatically generating relevant questions from their own study materials and providing immediate feedback on their answers.
+**[Easy / Definition]** What is Natural Language Processing?
 
-## 👨‍💻 Author
+- Reference answer (source text): Natural Language Processing is a field of artificial intelligence that enables computers to understand, interpret, and generate human language.
+- Student answer: "Natural language processing is an AI field that lets computers understand and generate human language."
+- Result: **5.6 / 10**, similarity 45.9%, concept coverage 62.5%, status *partial*; missing concepts: intelligence, artificial, interpret
 
-**Aman Khillare**
+**[Easy / Definition]** What is Natural Language Processing?
 
-AI Viva Question Generator Using Natural Language Processing
+- Reference answer (source text): Natural Language Processing is a field of artificial intelligence that enables computers to understand, interpret, and generate human language.
+- Student answer: "It is the process of splitting text into tokens."
+- Result: **0.8 / 10**, similarity 0.0%, concept coverage 12.5%, status *weak*; missing concepts: intelligence, artificial, understand, interpret, language, computer, generate
 
-## 📄 License
+**[Medium / Comparison]** Explain the difference between stemming and lemmatization.
 
-This project is intended for educational and academic purposes. Add an open-source license, such as the MIT License, if you want others to reuse and modify the project under those terms.
+- Reference answer (source text): Unlike stemming, lemmatization produces valid words, whereas stemming can produce non-words such as "studi". Lemmatization is slower than stemming because it needs a dictionary lookup.
+- Student answer: "Stemming chops suffixes off words to get a root form, while lemmatization uses a dictionary to return valid words but is slower."
+- Result: **4.4 / 10**, similarity 15.4%, concept coverage 62.5%, status *partial*; missing concepts: non-words, lookup, studi
+
+**[Difficult / Analysis]** Critically analyse this claim from the notes: "The main advantage of TF-IDF is that it down-weights words that appear in many documents, so it is more useful than Bag-of-Words for classification tasks."
+
+- Reference answer (source text): The main advantage of TF-IDF is that it down-weights words that appear in many documents, so it is more useful than Bag-of-Words for classification tasks. A limitation of TF-IDF is that it ignores word order and cannot capture sem...
+- Student answer: "TF-IDF is better because it reduces the weight of very common words, so rare informative words matter more for classification."
+- Result: **1.3 / 10**, similarity 14.7%, concept coverage 12.5%, status *weak*; missing concepts: down-weights, bag-of-words, limitation, advantage, document, semantic, ignores
+
+Notice the TF-IDF-only mode is **strict on paraphrases**: a reasonable answer in different words scores "partial". This is the main reason to install sentence-transformers.
+
+## Known limitations
+
+- **Rule-based question generation is not human-level understanding.** It matches surface patterns (definitions, "because", "unlike", advantages/limitations). Some questions will be awkward or too literal; texts without such patterns produce fewer questions (the app says so).
+- **Reference answers are source sentences**, not model-written answers, so they can be verbose.
+- **Scoring measures textual overlap, not factual correctness.** Cosine similarity can reward a wrong answer that reuses the right words and punish a right answer in new words. Use scores as study guidance only.
+- Scanned/image-only PDFs are rejected (no OCR). Very long PDFs are truncated at 300,000 characters.
+- Single-user local app: no login, one browser session per document. Bootstrap and Chart.js load from a CDN, so the pages need internet access (download them into `static/` for fully offline use).
+- The Flask dev server and the default `SECRET_KEY` are for local use only (set `SECRET_KEY` for anything shared).
+
+## Possible future improvements
+
+OCR for scanned PDFs; transformer-based question generation (e.g. T5) with rule-based fallback; per-user accounts; spaced-repetition scheduling; exporting results to PDF/CSV; multi-document question banks; calibrated scoring weights using teacher-graded answers.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `LookupError: Resource punkt ... not found` | Run `python setup_nlp_data.py` |
+| `OSError: [E050] Can't find model 'en_core_web_sm'` | `python -m spacy download en_core_web_sm` (the app still runs, NER is just disabled) |
+| `venv\Scripts\activate` is blocked | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, reopen the terminal |
+| `pip install PyMuPDF` fails | Upgrade pip and use Python 3.9-3.12 (64-bit) |
+| Charts or styling missing | The CDN needs internet; check your connection |
+| "No extractable text" for a PDF | It is a scan - paste the text or use a text-based PDF |
+| Port 5000 already in use | Edit the last line of `app.py`: `app.run(debug=True, port=5001)` |
+| Want a clean slate | Stop the app and delete `viva.db` |
